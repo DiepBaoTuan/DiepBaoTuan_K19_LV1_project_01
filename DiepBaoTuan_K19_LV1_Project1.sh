@@ -194,4 +194,4 @@ END {
     for (genre in count) {
         print count[genre], genre
     }
-}' F_DB_P1.txt | sort -rn |head -n20
+}' F_DB_P1.txt | sort -rn
