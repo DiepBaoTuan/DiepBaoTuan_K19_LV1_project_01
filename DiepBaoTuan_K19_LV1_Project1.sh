@@ -2,6 +2,8 @@
 #Q1:
 touch resultQ1.txt
 curl "https://raw.githubusercontent.com/yinghaoz1/tmdb-movie-dataset-analysis/master/tmdb-movies.csv">DB_P1.txt
+sed 's/""/##/g' DB_P1.txt>temp_DB_P1.txt
+awk -F '"' -v OFS='"' '{for (i=2; i<=NF; i+=2) gsub(/,/, " ", $i)} 1' temp_DB_P1.txt>F_DB_P1.txt
 awk -F, '
 NR==1 {
   for (i=1; i<=NF; i++) {
@@ -23,55 +25,10 @@ NR==1 {
   sortable_date = yyyy "-" d[2] "-" d[1]
   print sortable_date "\t" $ot_col
 }
-' DB_P1.txt | sort -r>resultQ1.txt
+'F_DB_P1.txt | sort -r>resultQ1.txt
 
 #Q2
-touch resultQ2.txt
-touch temp_DB_P1.txt
-touch F_DB_P1.txt
-awk '{gsub(/, /, "@@@")}' DB_P1.txt>F_DB_P1.txt
-awk '{
-  result = ""
-
-  # Lặp qua từng trường (field)
-  for (i=1; i<=NF; i++) {
-    # Kiểm tra nếu trường bắt đầu bằng " và kết thúc bằng "
-    if ($i ~ /^".*"$/) {
-      # Xóa dấu " ở đầu và cuối
-      gsub(/^"|"$/, "", $i)
-
-      # Thay thế tất cả dấu phẩy bằng @@@
-      gsub(/,/, "@@@", $i)
-
-      # Thêm lại dấu " vào đầu và cuối
-      $i = "\"" $i "\""
-    }
-    # Nối trường hiện tại vào chuỗi kết quả, có khoảng trắng
-    result = result (i==1 ? "" : " ") $i
-  }
-}' F_DB_P1.txt>temp_DB_P1.txt
-awk -F"," 'NR==1 {              
-    # Tự động tìm số thứ tự cột dựa trên tên tiêu đề
-    for(i=1; i<=NF; i++) {
-        if ($i == "id") id_col = i
-        else if ($i == "original_title") ot_col = i
-        else if ($i == "vote_average") va_col = i
-    }
-    # In ra tiêu đề mới
-    print "id\t Vote_avg\tTitle"
-    next
-}
-{
-    # Chỉ xử lý dòng nếu tìm thấy cả hai cột
-    if (va_col && ot_col) {
-        # Kiểm tra điều kiện và in ra kết quả
-        if ($va_col ~ /^[0-9]+(\.[0-9]+)?$/ && $va_col + 0 >= 7.5) {
-            # In ra giá trị của cột va_col và ot_col
-            print $id_col"\t"$va_col"\t"$ot_col
-        }
-    }
-}' temp_DB_P1.txt| (head -n1 && tail -n+2 | sort -n -k2)>ResultQ2.txt               
-
+awk 'BEGIN { FS = "," } NR > 1 && $18 >= 7.5 { print $18, $6 }' F_DB_P1.txt|sort -r>ResultQ2.txt
 #Q3
 awk -F"," '
 BEGIN {
@@ -112,7 +69,7 @@ END {
   print "Movie with the Lowest Revenue (greater than 0):"
   print "Title: " min_title
   print "Revenue: " min_revenue
-}' temp_DB_P1.txt
+}' F_DB_P1.txt
 
 #Q4
 awk -F"," '
@@ -137,7 +94,7 @@ NR==1 {
 END {
   #in kết quả
   print "Total revenue: " total_revenue
-}' temp_DB_P1.txt
+}' F_DB_P1.txt
 
 #Q5
 awk -F',' '{
@@ -185,7 +142,7 @@ END {
     for (director in count) {
         print count[director], director
     }
-}' temp_DB_P1.txt | sort -rn| head -n1
+}' F_DB_P1.txt | sort -rn| head -n1
 
 #Most appearance Actor
 awk -F',' '
@@ -211,7 +168,7 @@ END {
     for (cast in count) {
         print count[cast], cast
     }
-}' temp_DB_P1.txt | sort -rn | head -n1
+}' F_DB_P1.txt | sort -rn | head -n1
 
 #Q7
 awk -F',' '
@@ -237,4 +194,4 @@ END {
     for (genre in count) {
         print count[genre], genre
     }
-}' temp_DB_P1.txt | sort -rn |head -n20
+}' F_DB_P1.txt | sort -rn |head -n20
